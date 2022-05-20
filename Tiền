@@ -1,0 +1,76 @@
+import tensorflow as tf
+import matplotlib.pyplot as plt
+import numpy as np
+from tensorflow import keras
+from keras.models import Sequential
+from keras.layers.convolutional import Conv2D, MaxPooling2D
+from keras.layers import Flatten, Dense, Dropout, Activation
+from google.colab import drive
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.utils import load_img,img_to_array
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+data_generator = ImageDataGenerator(rescale=1./255,validation_split=0.1,width_shift_range=0.2,height_shift_range=0.2,zoom_range=0.2,horizontal_flip=True)
+
+trainset='/content/drive/MyDrive/Colab Notebooks/money/money/Train'
+
+train_dataset=data_generator.flow_from_directory(trainset,
+                                     target_size=(100,100),
+                                     batch_size=128,
+                                     class_mode='categorical',
+                                     subset="training",
+                                     shuffle=True,)
+validation_set=data_generator.flow_from_directory(trainset,
+                                              target_size=(100,100),
+                                              batch_size=128,
+                                              class_mode='categorical',
+                                              subset="validation",
+                                              shuffle=True)
+ validation_set.class_indices
+model = Sequential()
+model.add(Conv2D(32,(3,3),activation='relu',kernel_initializer='he_uniform',padding ='same',input_shape=(100,100,3)))
+model.add(Conv2D(32,(3,3),activation='relu',kernel_initializer='he_uniform',padding ='same'))
+model.add(MaxPooling2D((2,2)))
+model.add(Conv2D(64,(3,3),activation='relu',kernel_initializer='he_uniform',padding ='same'))
+model.add(Conv2D(64,(3,3),activation='relu',kernel_initializer='he_uniform',padding ='same'))
+model.add(MaxPooling2D((2,2)))
+model.add(Conv2D(128,(3,3),activation='relu',kernel_initializer='he_uniform',padding ='same'))
+model.add(Conv2D(128,(3,3),activation='relu',kernel_initializer='he_uniform',padding ='same'))
+model.add(MaxPooling2D((2,2)))
+model.add(Flatten())
+model.add(Dense(256,activation='relu',kernel_initializer='he_uniform'))
+model.add(Dropout(0.2))
+model.add(Dense(11,activation='softmax'))
+
+model.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
+model.fit(train_dataset,batch_size=128,epochs=20,verbose=1,validation_data=validation_set)
+
+train_dataset=data_generator.flow_from_directory(trainset,
+                                     target_size=(100,100),
+                                     batch_size=128,
+                                     class_mode='categorical',
+                                     subset="training",
+                                     shuffle=True,)
+validation_set=data_generator.flow_from_directory(trainset,
+                                              target_size=(100,100),
+                                              batch_size=128,
+                                              class_mode='categorical',
+                                              subset="validation",
+                                              shuffle=True)
+                                              
+model.save('tien.hs')
+
+from tensorflow.keras.models import load_model
+model1=load_model('tien.hs')
+
+import numpy as np
+from tensorflow.keras.utils import load_img,img_to_array
+img=load_img('200dong.1.jpg',target_size=(100,100))
+img=img_to_array(img)
+img=img.reshape(1,100,100,3)
+img=img.astype('float32')
+img=img/255
+np.argmax(model1.predict(img),axis=-1)
